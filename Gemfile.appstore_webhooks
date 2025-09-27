@@ -1,0 +1,3 @@
+git 'git@github.com:artyru/appstore_sdk.git', branch: 'develop' do
+  gem 'appstore_sdk'
+end
