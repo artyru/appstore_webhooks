@@ -70,7 +70,7 @@ end
 
 ## Development
 
-1. Run specs for the gem (`bundle exec rspec`) using the dummy app (TODO: add dummy app setup).
+1. Run the test suite for the gem (`bundle exec rake test`) using the provided in-memory harness.
 2. In the host application, run the full test suite to ensure integration is wired correctly.
 
 ## License
