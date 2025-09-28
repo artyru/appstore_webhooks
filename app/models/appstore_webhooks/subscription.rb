@@ -30,6 +30,7 @@ module AppstoreWebhooks
     validates :original_transaction_id, presence: true, uniqueness: true
     validates :app_account_token, presence: true
     validates :status, inclusion: { in: STATUSES.values }
+    validates :expires_at, presence: true
 
     aasm column: :status, enum: true do
       state :active, initial: true
@@ -103,6 +104,10 @@ module AppstoreWebhooks
       update!(attrs.compact)
     end
 
+    def active?
+      super && expires_at.future?
+    end
+
     private
 
     def fetch_value(payload, key)
@@ -114,12 +119,12 @@ module AppstoreWebhooks
       return if raw.blank?
 
       case raw
-      when Time then raw
-      when DateTime, ActiveSupport::TimeWithZone then raw.to_time
-      when Integer then Time.at(raw / 1000.0)
+      when Time then raw.in_time_zone
+      when DateTime, ActiveSupport::TimeWithZone then raw.in_time_zone
+      when Integer then Time.zone.at(raw / 1000.0)
       when String
         if raw.match?(/^\d+$/)
-          Time.at(raw.to_i / 1000.0)
+          Time.zone.at(raw.to_i / 1000.0)
         else
           Time.zone.parse(raw)
         end

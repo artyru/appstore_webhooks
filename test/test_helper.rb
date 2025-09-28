@@ -150,7 +150,8 @@ module TestHelpers
         app_account_token: attrs[:app_account_token] || user.app_account_token,
         product_id: 'product.basic',
         status: 'active',
-        environment: 'sandbox'
+        environment: 'sandbox',
+        expires_at: Time.current + 1.day
       }
       AppstoreWebhooks::Subscription.create!(defaults.merge(attrs))
     end
