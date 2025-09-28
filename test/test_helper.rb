@@ -18,6 +18,7 @@ require 'rack/mock'
 require 'rack/utils'
 require 'logger'
 require 'base64'
+require 'appstore_webhooks/testing/apple_payload_helper'
 require 'active_job/test_helper'
 require 'active_support/testing/time_helpers'
 
@@ -129,6 +130,8 @@ end
 ActiveJob::Base.queue_adapter = :test
 ActionMailer::Base.deliveries.clear
 Time.zone = 'UTC'
+
+ActiveSupport::TestCase.include AppstoreWebhooks::Testing::ApplePayloadHelper if defined?(ActiveSupport::TestCase)
 
 Dir[File.join(__dir__, 'support/**/*.rb')].sort.each { |file| require file }
 

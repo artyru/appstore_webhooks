@@ -5,7 +5,7 @@ FactoryBot.define do
     association :user
     original_transaction_id { SecureRandom.uuid }
     app_account_token { user.app_account_token || SecureRandom.uuid }
-    product_id { 'product.basic' }
+    product_id { 'pro.weekly' }
     status { :active }
     environment { 'sandbox' }
     expires_at { 1.day.from_now }

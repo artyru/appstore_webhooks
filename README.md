@@ -30,6 +30,26 @@ This copies:
 - `config/initializers/appstore_webhooks.rb`
 - migrations for notifications/subscriptions/subscription events
 
+### Test utilities
+
+Run the setup generator to scaffold FactoryBot fixtures and helpers in the host app:
+
+```bash
+rails generate appstore_webhooks:setup
+```
+
+The generator detects whether you keep tests under `spec/` (RSpec) or `test/` (Minitest) and will create:
+- `spec|test/factories/appstore_webhooks/*` with factories mirroring the engine models and Apple payload fixtures.
+- `spec|test/support/appstore_webhooks_payload_helper.rb` with the `encode_apple_jws` helper mixed into the appropriate test framework.
+
+Need an example request spec? Append `--with-request-spec` to copy a template that posts a signed payload to the webhook endpoint:
+
+```bash
+rails generate appstore_webhooks:setup --with-request-spec
+```
+
+Tweak the generated file to match your route, authentication, and user factory naming.
+
 Configure any options in the initializer (e.g. `user_class`, `user_token_column`, `alert_email`).
 
 Ensure the base `appstore_sdk` gem is also configured (bundle ID, keys, verify toggle). The engine automatically subscribes to webhook notifications and enqueues `ProcessNotificationWorker`.
