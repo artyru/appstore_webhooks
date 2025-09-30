@@ -25,6 +25,11 @@ module AppstoreWebhooks
       end
     end
 
+
+    rake_tasks do
+      load File.expand_path('../tasks/appstore_webhooks.rake', __dir__)
+    end
+
     initializer 'appstore_webhooks.subscribe_webhooks' do
       AppstoreSDK.on_notification do |payload|
         AppstoreWebhooks::ProcessNotificationWorker.perform_now(payload.as_json)

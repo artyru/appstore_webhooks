@@ -72,7 +72,6 @@ development:
 
 Each feature maps to the App Store product IDs that unlock it and may optionally specify `allowed_statuses`.
 
-
 Ensure the base `appstore_sdk` gem is also configured (bundle ID, keys, verify toggle). The engine automatically subscribes to webhook notifications and enqueues `ProcessNotificationWorker`.
 
 ## Configuration options
@@ -109,6 +108,52 @@ end
 ```
 
 - The engine handles everything else: decoding payloads, persisting notifications/subscriptions, updating state machine, sending consumption info, and emailing alerts on missing users.
+
+### Maintenance tasks
+
+Use the provided rake task to requeue failed notifications and run the processor again:
+
+```bash
+bundle exec rake appstore_webhooks:notifications:retry_failed
+```
+
+Optional environment variables:
+- `LIMIT=<n>` — only requeue the first `n` failed notifications.
+- `SILENT=true` — suppress the summary output.
+
+Failed notifications without stored raw payloads are skipped to avoid enqueuing malformed jobs.
+
+### Remote subscription synchronisation
+
+The `RemoteSubscriptionSyncService` provides on-demand refresh of subscription state via the App Store Server API. Internally it maps Apple’s `SubscriptionStatus` values to the engine’s enum using the following table:
+
+| Apple status                | Local status       |
+|----------------------------|--------------------|
+| `ACTIVE`                   | `active`
+| `IN_GRACE_PERIOD`          | `grace`
+| `BILLING_GRACE_PERIOD`     | `grace`
+| `BILLING_RETRY`            | `billing_retry`
+| `EXPIRED`                  | `expired`
+| `REVOKED`                  | `revoked`
+
+Any status not present in the table leaves the local status unchanged. The service will also:
+- Fetch `getAllSubscriptionStatuses` and `getTransactionHistory` for a transaction id.
+- Decode signed transactions/renewal info using the app’s configured verifier.
+- Update `Subscription` timestamps, product, token, environment, auto-renew flag, and any mapped status.
+- Skip updates when the payload is older than `subscription.last_synced_at`, logging a stale event.
+- Always touch `last_synced_at` so periodic jobs can use it as a freshness guard.
+
+Two rake tasks wrap the job:
+
+```bash
+bundle exec rake appstore_webhooks:subscriptions:sync[ORIGINAL_ID]
+# or async: ASYNC=true bundle exec rake appstore_webhooks:subscriptions:sync[ORIGINAL_ID]
+
+bundle exec rake appstore_webhooks:subscriptions:sync_stale
+# supports LIMIT, BATCH_SIZE, STALE_AFTER_MINUTES, ASYNC, SILENT
+```
+
+The tasks enqueue `SyncSubscriptionJob`, which in turn runs `RemoteSubscriptionSyncService`.
 
 ## Development
 

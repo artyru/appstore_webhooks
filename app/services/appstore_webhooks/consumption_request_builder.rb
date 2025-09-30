@@ -86,7 +86,7 @@ module AppstoreWebhooks
       cached = subscription.respond_to?(:lifetime_purchased_cents) && subscription.lifetime_purchased_cents
       return cached if cached
 
-      notifications = subscription.notifications.to_a
+      notifications = Array(subscription.notifications)
 
       total = notifications.sum do |notification|
         payload = notification.transaction_payload || {}
@@ -103,7 +103,7 @@ module AppstoreWebhooks
       cached = subscription.respond_to?(:lifetime_refunded_cents) && subscription.lifetime_refunded_cents
       return cached if cached
 
-      subscription.notifications.select do |notification|
+      Array(subscription.notifications).select do |notification|
         %w[REFUND REFUND_REVERSED].include?(notification.notification_type)
       end.sum { |notification| (notification.transaction_payload || {})['price'].to_i }
     end

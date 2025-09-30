@@ -75,9 +75,16 @@ module AppstoreWebhooks
       end
 
       def matching_subscriptions(product_ids)
-        return AppstoreWebhooks::Subscription.none unless user.respond_to?(:subscriptions)
+        scope =
+          if user.respond_to?(:subscriptions)
+            user.subscriptions
+          elsif user
+            AppstoreWebhooks::Subscription.where(user: user)
+          end
 
-        user.subscriptions.where(product_id: product_ids)
+        return AppstoreWebhooks::Subscription.none unless scope.respond_to?(:where)
+
+        scope.where(product_id: product_ids)
       end
 
       def entitled_subscription?(subscription)

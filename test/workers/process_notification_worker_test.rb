@@ -176,6 +176,43 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     assert_nil notification.subscription
   end
 
+  def test_skips_stale_notification_that_predates_last_sync
+    user = create_user(app_account_token: @app_account_token)
+    subscription = create_subscription(
+      user: user,
+      original_transaction_id: @base_transaction['originalTransactionId'],
+      app_account_token: @app_account_token,
+      product_id: @base_transaction['productId'],
+      status: 'canceled',
+      expires_at: 1.day.from_now
+    )
+    subscription.update!(last_synced_at: Time.current)
+
+    old_time = 2.days.ago
+    transaction_payload = @base_transaction.merge(
+      'signedDate' => (old_time.to_i * 1000),
+      'purchaseDate' => (old_time.to_i * 1000),
+      'expiresDate' => (old_time.to_i * 1000)
+    )
+
+    payload_hash = build_worker_payload(
+      notification_type: 'SUBSCRIBED',
+      transaction_payload: transaction_payload,
+      signed_date: old_time
+    )
+
+    assert_no_difference -> { AppstoreWebhooks::SubscriptionEvent.count } do
+      perform_worker(payload_hash, transaction_payload: transaction_payload, renewal_payload: {})
+    end
+
+    subscription.reload
+    assert_equal 'canceled', subscription.status
+
+    notification = AppstoreWebhooks::Notification.find_by(notification_uuid: @notification_uuid)
+    assert_equal 'processed', notification.processing_state
+    assert_nil notification.processing_error
+  end
+
   def test_marks_notification_failed_when_sync_service_raises
     user = create_user(app_account_token: @app_account_token)
     create_subscription(
@@ -205,7 +242,7 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
 
   private
 
-  def build_worker_payload(notification_type:, transaction_payload:, renewal_payload: {}, subtype: nil)
+  def build_worker_payload(notification_type:, transaction_payload:, renewal_payload: {}, subtype: nil, signed_date: Time.current)
     data = { 'environment' => 'LocalTesting' }
     data['signedTransactionInfo'] = 'stub-transaction' if transaction_payload.present?
     data['signedRenewalInfo'] = 'stub-renewal' if renewal_payload.present?
@@ -216,7 +253,7 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
       'notificationUUID' => @notification_uuid,
       'data' => data,
       'version' => '2.0',
-      'signedDate' => (Time.current.to_i * 1000)
+      'signedDate' => (signed_date.to_i * 1000)
     }.compact
   end
 

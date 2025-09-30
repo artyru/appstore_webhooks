@@ -103,6 +103,14 @@ module AppstoreWebhooks
       end
 
       previous_status = subscription.status
+      event_timestamp = determine_event_timestamp(transaction_payload, renewal_payload, effective_payload)
+
+      if skip_stale_event?(subscription, event_timestamp)
+        notification.update!(subscription: subscription,
+                             processing_state: Notification::STATES[:processed],
+                             processing_error: nil)
+        return
+      end
 
       SubscriptionSyncService.new(
         notification: notification,
@@ -160,6 +168,38 @@ module AppstoreWebhooks
       AppstoreWebhooks::NotifyMissingUserJob.perform_later(notification.id, app_account_token)
     end
 
+    def determine_event_timestamp(transaction_payload, renewal_payload, effective_payload)
+      candidates = [
+        transaction_payload[:signed_date],
+        transaction_payload[:event_date],
+        transaction_payload[:purchase_date],
+        transaction_payload[:expires_date],
+        renewal_payload[:signed_date],
+        renewal_payload[:event_date],
+        renewal_payload[:renewal_date],
+        renewal_payload[:expires_date],
+        effective_payload[:signed_date],
+        effective_payload[:event_date],
+        effective_payload[:purchase_date],
+        effective_payload[:expires_date]
+      ].compact
+
+      candidates.each do |value|
+        timestamp = extract_timestamp(value)
+        return timestamp if timestamp
+      end
+
+      nil
+    end
+
+    def skip_stale_event?(subscription, event_timestamp)
+      return false if event_timestamp.nil?
+      return false if subscription.previous_changes.key?('id')
+      return false unless subscription.last_synced_at.present?
+
+      event_timestamp <= subscription.last_synced_at
+    end
+
     def derive_environment(payload)
       environment = payload[:environment]
       return environment.to_s.underscore if environment.respond_to?(:to_s)
@@ -171,9 +211,9 @@ module AppstoreWebhooks
       return if value.blank?
 
       if value.is_a?(Integer)
-        Time.at(value / 1000.0)
+        Time.zone.at(value / 1000.0)
       elsif value.is_a?(String) && value.match?(/^\d+$/)
-        Time.at(value.to_i / 1000.0)
+        Time.zone.at(value.to_i / 1000.0)
       else
         Time.zone.parse(value.to_s)
       end
