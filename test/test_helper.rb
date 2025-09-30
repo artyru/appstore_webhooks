@@ -118,6 +118,13 @@ AppstoreWebhooks.configure do |config|
   config.alert_email = 'alerts@example.com'
   config.enable_online_checks = false
   config.verification_enabled = false
+  config.entitlements = {
+    'features' => {
+      'dictionary_words' => {
+        'product_ids' => ['product.basic']
+      }
+    }
+  }
 end
 
 AppstoreSDK.configure do |config|

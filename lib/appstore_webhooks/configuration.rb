@@ -17,6 +17,8 @@ module AppstoreWebhooks
                   :verification_enabled,
                   :chain_verifier
 
+    attr_reader :entitlements
+
     def initialize
       @user_class = 'User'
       @user_token_column = :app_account_token
@@ -32,6 +34,15 @@ module AppstoreWebhooks
       @enable_online_checks = false
       @verification_enabled = true
       @chain_verifier = nil
+      @entitlements = {}
+    end
+
+    def entitlements=(value)
+      @entitlements = normalize_entitlements(value)
+    end
+
+    def feature_entitlements(feature)
+      entitlements.fetch('features', {}).fetch(feature.to_s, {})
     end
 
     def user_class_constant
@@ -43,6 +54,18 @@ module AppstoreWebhooks
     end
 
     private
+
+    def normalize_entitlements(value)
+      return {} if value.nil?
+
+      if value.respond_to?(:deep_stringify_keys)
+        value.deep_stringify_keys
+      elsif value.is_a?(Hash)
+        value.transform_keys(&:to_s)
+      else
+        {}
+      end
+    end
 
     def default_environment
       Rails.env.production? ? :production : :sandbox

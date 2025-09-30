@@ -1,0 +1,20 @@
+# Example entitlements configuration. Update product_ids to match your App Store products.
+# Additional features can be added under the `features` key. Each feature may optionally define
+# `allowed_statuses` (defaults to active/grace/billing_retry).
+
+default: &default
+  features:
+    dictionary_words:
+      product_ids:
+        - pro.weekly
+        - pro.monthly
+
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

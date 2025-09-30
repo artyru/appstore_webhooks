@@ -24,11 +24,15 @@ Run bundler and the install generator:
 bundle install
 rails generate appstore_webhooks:install
 rails db:migrate
+# Add --skip-pundit if you do not use Pundit
+# rails generate appstore_webhooks:install --skip-pundit
 ```
 
 This copies:
 - `config/initializers/appstore_webhooks.rb`
+- `config/appstore_webhooks_entitlements.yml`
 - migrations for notifications/subscriptions/subscription events
+- `app/policies/dictionary_word_policy.rb` (skip with `--skip-pundit`)
 
 ### Test utilities
 
@@ -52,6 +56,23 @@ Tweak the generated file to match your route, authentication, and user factory n
 
 Configure any options in the initializer (e.g. `user_class`, `user_token_column`, `alert_email`).
 
+Entitlements are controlled via `config/appstore_webhooks_entitlements.yml`:
+
+```yaml
+default: &default
+  features:
+    dictionary_words:
+      product_ids:
+        - pro.weekly
+        - pro.monthly
+
+development:
+  <<: *default
+```
+
+Each feature maps to the App Store product IDs that unlock it and may optionally specify `allowed_statuses`.
+
+
 Ensure the base `appstore_sdk` gem is also configured (bundle ID, keys, verify toggle). The engine automatically subscribes to webhook notifications and enqueues `ProcessNotificationWorker`.
 
 ## Configuration options
@@ -62,10 +83,11 @@ AppstoreWebhooks.configure do |config|
   config.user_token_column = :app_account_token
   config.alert_email = ENV['APPSTORE_ALERT_EMAIL']
   config.consumption_builder = 'AppstoreWebhooks::ConsumptionRequestBuilder'
+  config.entitlements = Rails.application.config_for(:appstore_webhooks_entitlements)
 end
 ```
 
-Override defaults as needed (e.g., if you store the token in another column or want a custom consumption builder).
+Override defaults as needed (e.g., if you store the token in another column, want a custom consumption builder, or prefer to build the entitlements hash inline).
 
 ## Usage in host app
 
