@@ -23,6 +23,12 @@ module AppstoreWebhooks
         assert Checker.call(user: @user, feature: @feature)
       end
 
+      def test_returns_true_when_subscription_canceled_but_not_expired
+        create_subscription(user: @user, product_id: 'pro.weekly', status: 'canceled', expires_at: 1.hour.from_now)
+
+        assert Checker.call(user: @user, feature: @feature)
+      end
+
       def test_returns_true_for_grace_period
         create_subscription(
           user: @user,
@@ -37,6 +43,18 @@ module AppstoreWebhooks
 
       def test_returns_false_for_expired_subscription
         create_subscription(user: @user, product_id: 'pro.weekly', status: 'active', expires_at: 1.day.ago)
+
+        refute Checker.call(user: @user, feature: @feature)
+      end
+
+      def test_returns_false_when_canceled_subscription_expired
+        create_subscription(
+          user: @user,
+          product_id: 'pro.weekly',
+          status: 'canceled',
+          expires_at: 1.hour.ago,
+          grace_period_expires_at: 1.day.from_now
+        )
 
         refute Checker.call(user: @user, feature: @feature)
       end

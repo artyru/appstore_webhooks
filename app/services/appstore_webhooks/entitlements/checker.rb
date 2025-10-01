@@ -6,7 +6,7 @@ require 'active_support/core_ext/hash/keys'
 module AppstoreWebhooks
   module Entitlements
     class Checker
-      DEFAULT_ALLOWED_STATUSES = %w[active grace billing_retry].freeze
+      DEFAULT_ALLOWED_STATUSES = %w[active grace billing_retry canceled].freeze
 
       def self.call(user:, feature:, config: AppstoreWebhooks.configuration.entitlements)
         new(user: user, feature: feature, config: config).call
@@ -100,7 +100,11 @@ module AppstoreWebhooks
         expires_at = subscription.expires_at
         grace_expires_at = subscription.grace_period_expires_at
 
-        (expires_at.present? && expires_at > now) || (grace_expires_at.present? && grace_expires_at > now)
+        if subscription.status.to_s == 'canceled'
+          expires_at.present? && expires_at > now
+        else
+          (expires_at.present? && expires_at > now) || (grace_expires_at.present? && grace_expires_at > now)
+        end
       end
 
       def current_time
