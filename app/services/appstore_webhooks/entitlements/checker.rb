@@ -88,23 +88,11 @@ module AppstoreWebhooks
       end
 
       def entitled_subscription?(subscription)
-        status_allows?(subscription) && not_expired?(subscription)
+        status_allows?(subscription) && subscription.entitlement_active?(at: current_time)
       end
 
       def status_allows?(subscription)
         allowed_statuses.include?(subscription.status.to_s)
-      end
-
-      def not_expired?(subscription)
-        now = current_time
-        expires_at = subscription.expires_at
-        grace_expires_at = subscription.grace_period_expires_at
-
-        if subscription.status.to_s == 'canceled'
-          expires_at.present? && expires_at > now
-        else
-          (expires_at.present? && expires_at > now) || (grace_expires_at.present? && grace_expires_at > now)
-        end
       end
 
       def current_time

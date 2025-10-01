@@ -108,6 +108,18 @@ module AppstoreWebhooks
       super && expires_at.future?
     end
 
+    def entitlement_active?(at: nil)
+      moment = at || Time.current
+
+      return false if expires_at.blank?
+
+      if canceled?
+        expires_at > moment
+      else
+        expires_at > moment || (grace_period_expires_at.present? && grace_period_expires_at > moment)
+      end
+    end
+
     private
 
     def fetch_value(payload, key)

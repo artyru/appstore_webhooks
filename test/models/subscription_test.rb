@@ -49,6 +49,48 @@ class SubscriptionTest < ActiveSupport::TestCase
     assert_not subscription.active?
   end
 
+  def test_entitlement_active_returns_true_for_active_subscription
+    subscription = create_subscription(status: 'active', expires_at: 30.minutes.from_now)
+
+    assert subscription.entitlement_active?
+  end
+
+  def test_entitlement_active_returns_true_during_grace_period
+    subscription = create_subscription(
+      status: 'grace',
+      expires_at: 1.hour.ago,
+      grace_period_expires_at: 1.hour.from_now
+    )
+
+    assert subscription.entitlement_active?
+  end
+
+  def test_entitlement_active_returns_false_when_grace_period_over
+    subscription = create_subscription(
+      status: 'grace',
+      expires_at: 2.hours.ago,
+      grace_period_expires_at: 5.minutes.ago
+    )
+
+    assert_not subscription.entitlement_active?
+  end
+
+  def test_entitlement_active_returns_true_when_canceled_but_still_valid
+    subscription = create_subscription(status: 'canceled', expires_at: 45.minutes.from_now)
+
+    assert subscription.entitlement_active?
+  end
+
+  def test_entitlement_active_returns_false_when_canceled_and_expired
+    subscription = create_subscription(
+      status: 'canceled',
+      expires_at: 30.minutes.ago,
+      grace_period_expires_at: 1.day.from_now
+    )
+
+    assert_not subscription.entitlement_active?
+  end
+
   def test_sync_from_transaction_normalizes_epoch_timestamps_to_time_zone
     Time.use_zone('Pacific Time (US & Canada)') do
       subscription = create_subscription(expires_at: 1.hour.from_now)
