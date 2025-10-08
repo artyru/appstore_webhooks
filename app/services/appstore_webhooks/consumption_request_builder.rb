@@ -17,7 +17,7 @@ module AppstoreWebhooks
         lifetime_dollars_purchased: bucket_amount(total_purchased_cents,
                                                   AppstoreSDK::Models::LifetimeDollarsPurchased),
         lifetime_dollars_refunded: bucket_amount(total_refunded_cents,
-                                                AppstoreSDK::Models::LifetimeDollarsRefunded),
+                                                 AppstoreSDK::Models::LifetimeDollarsRefunded),
         play_time: bucket_play_time,
         account_tenure: bucket_account_tenure,
         refund_preference: AppstoreSDK::Models::RefundPreference::NO_PREFERENCE
@@ -90,7 +90,7 @@ module AppstoreWebhooks
 
       total = notifications.sum do |notification|
         payload = notification.transaction_payload || {}
-        payload['price'].to_i
+        payload["price"].to_i
       end
 
       total += transaction_payload[:price].to_i if total.zero?
@@ -105,7 +105,7 @@ module AppstoreWebhooks
 
       Array(subscription.notifications).select do |notification|
         %w[REFUND REFUND_REVERSED].include?(notification.notification_type)
-      end.sum { |notification| (notification.transaction_payload || {})['price'].to_i }
+      end.sum { |notification| (notification.transaction_payload || {})["price"].to_i }
     end
 
     def bucket_amount(cents, enum_klass)

@@ -8,7 +8,7 @@ module AppstoreWebhooks
       subscription = resolve_subscription(subscription_id, original_transaction_id)
       original_transaction_id ||= subscription&.original_transaction_id
 
-      raise ArgumentError, 'original_transaction_id is required' if original_transaction_id.to_s.empty?
+      raise ArgumentError, "original_transaction_id is required" if original_transaction_id.to_s.empty?
 
       log_missing_subscription(original_transaction_id) unless subscription
 
@@ -21,8 +21,8 @@ module AppstoreWebhooks
       subscription.reload if subscription&.persisted?
 
       result
-    rescue StandardError => error
-      log_failure(original_transaction_id, error)
+    rescue StandardError => e
+      log_failure(original_transaction_id, e)
       raise
     end
 
@@ -47,7 +47,7 @@ module AppstoreWebhooks
     def log_failure(original_transaction_id, error)
       return unless defined?(Rails) && Rails.logger
 
-      identifier = original_transaction_id.presence || 'unknown'
+      identifier = original_transaction_id.presence || "unknown"
       Rails.logger.error(
         "[appstore_webhooks] failed remote sync for #{identifier}: #{error.message}"
       )

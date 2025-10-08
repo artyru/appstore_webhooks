@@ -20,10 +20,10 @@ module AppstoreWebhooks
     attr_reader :entitlements
 
     def initialize
-      @user_class = 'User'
+      @user_class = "User"
       @user_token_column = :app_account_token
       @alert_email = nil
-      @consumption_builder = 'AppstoreWebhooks::ConsumptionRequestBuilder'
+      @consumption_builder = "AppstoreWebhooks::ConsumptionRequestBuilder"
       @bundle_id = nil
       @environment = default_environment
       @issuer_id = nil
@@ -42,7 +42,7 @@ module AppstoreWebhooks
     end
 
     def feature_entitlements(feature)
-      entitlements.fetch('features', {}).fetch(feature.to_s, {})
+      entitlements.fetch("features", {}).fetch(feature.to_s, {})
     end
 
     def user_class_constant

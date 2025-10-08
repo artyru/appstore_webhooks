@@ -4,25 +4,25 @@ module AppstoreWebhooks
   class Subscription < ApplicationRecord
     include AASM
 
-    self.table_name = 'subscriptions'
+    self.table_name = "subscriptions"
 
     STATUSES = {
-      active:        'active',
-      grace:         'grace',
-      billing_retry: 'billing_retry',
-      expired:       'expired',
-      canceled:      'canceled',
-      revoked:       'revoked',
-      refunded:      'refunded'
+      active: "active",
+      grace: "grace",
+      billing_retry: "billing_retry",
+      expired: "expired",
+      canceled: "canceled",
+      revoked: "revoked",
+      refunded: "refunded"
     }.freeze
 
     belongs_to :user,
                class_name: -> { AppstoreWebhooks.configuration.user_class }.call
     has_many :events,
-             class_name: 'AppstoreWebhooks::SubscriptionEvent',
+             class_name: "AppstoreWebhooks::SubscriptionEvent",
              dependent: :destroy
     has_many :notifications,
-             class_name: 'AppstoreWebhooks::Notification',
+             class_name: "AppstoreWebhooks::Notification",
              dependent: :nullify
 
     enum :status, STATUSES
@@ -43,44 +43,44 @@ module AppstoreWebhooks
 
       event :activate do
         transitions from: %i[active grace billing_retry expired canceled refunded],
-                   to: :active,
-                   after: :apply_payload
+                    to: :active,
+                    after: :apply_payload
       end
 
       event :start_grace do
         transitions from: %i[active billing_retry canceled],
-                   to: :grace,
-                   after: :apply_payload
+                    to: :grace,
+                    after: :apply_payload
       end
 
       event :enter_billing_retry do
         transitions from: %i[active grace canceled],
-                   to: :billing_retry,
-                   after: :apply_payload
+                    to: :billing_retry,
+                    after: :apply_payload
       end
 
       event :expire do
         transitions from: %i[active grace billing_retry canceled],
-                   to: :expired,
-                   after: :apply_payload
+                    to: :expired,
+                    after: :apply_payload
       end
 
       event :cancel_auto_renew do
         transitions from: %i[active grace billing_retry],
-                   to: :canceled,
-                   after: :apply_payload
+                    to: :canceled,
+                    after: :apply_payload
       end
 
       event :revoke do
         transitions from: %i[active grace billing_retry expired canceled],
-                   to: :revoked,
-                   after: :apply_payload
+                    to: :revoked,
+                    after: :apply_payload
       end
 
       event :refund do
         transitions from: %i[active grace billing_retry canceled expired],
-                   to: :refunded,
-                   after: :apply_payload
+                    to: :refunded,
+                    after: :apply_payload
       end
     end
 
@@ -160,7 +160,7 @@ module AppstoreWebhooks
       value = fetch_value(renewal_payload, :raw_auto_renew_status) if value.nil?
       return if value.nil?
 
-      value.to_s == '1'
+      value.to_s == "1"
     end
   end
 end

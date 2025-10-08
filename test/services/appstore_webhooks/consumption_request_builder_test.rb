@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 module AppstoreWebhooks
   class ConsumptionRequestBuilderTest < ActiveSupport::TestCase
     def setup
       @subscription = create_subscription(
-        status: 'active',
+        status: "active",
         created_at: 10.days.ago,
         last_synced_at: Time.current,
         app_account_token: SecureRandom.uuid
       )
       @transaction_payload = {
         original_transaction_id: @subscription.original_transaction_id,
-        transaction_id: '2000000000001',
+        transaction_id: "2000000000001",
         app_account_token: @subscription.app_account_token,
         price: 29_900,
         status: 1
@@ -45,7 +45,7 @@ module AppstoreWebhooks
     end
 
     def test_marks_delivery_failure_for_refunded_subscription
-      @subscription.update!(status: 'refunded')
+      @subscription.update!(status: "refunded")
 
       request = builder.call
 
@@ -54,7 +54,7 @@ module AppstoreWebhooks
     end
 
     def test_marks_partially_consumed_for_billing_retry
-      @subscription.update!(status: 'billing_retry')
+      @subscription.update!(status: "billing_retry")
 
       request = builder.call
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class NotificationTest < ActiveSupport::TestCase
   def setup
@@ -9,7 +9,7 @@ class NotificationTest < ActiveSupport::TestCase
 
   def test_requires_notification_uuid
     notification = AppstoreWebhooks::Notification.new(
-      notification_type: 'SUBSCRIBED',
+      notification_type: "SUBSCRIBED",
       app_account_token: @subscription.app_account_token,
       processing_state: AppstoreWebhooks::Notification::STATES[:pending],
       raw_payload: {},
@@ -27,7 +27,7 @@ class NotificationTest < ActiveSupport::TestCase
 
     duplicate = AppstoreWebhooks::Notification.new(
       notification_uuid: uuid,
-      notification_type: 'SUBSCRIBED',
+      notification_type: "SUBSCRIBED",
       app_account_token: @subscription.app_account_token,
       processing_state: AppstoreWebhooks::Notification::STATES[:pending],
       raw_payload: {},
@@ -36,7 +36,7 @@ class NotificationTest < ActiveSupport::TestCase
     )
 
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:notification_uuid], 'has already been taken'
+    assert_includes duplicate.errors[:notification_uuid], "has already been taken"
   end
 
   def test_unprocessed_scope_returns_pending_notifications

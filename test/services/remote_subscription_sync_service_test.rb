@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'test_helper'
-require 'ostruct'
+require "test_helper"
+require "ostruct"
 
 module AppstoreWebhooks
   class RemoteSubscriptionSyncServiceTest < ActiveSupport::TestCase
@@ -20,16 +20,16 @@ module AppstoreWebhooks
     end
 
     def setup
-      @original_transaction_id = '10000000000000'
+      @original_transaction_id = "10000000000000"
       @subscription = create_subscription(original_transaction_id: @original_transaction_id)
     end
 
     def test_fetches_status_and_decodes_transactions
-      decoded_transaction = OpenStruct.new(transaction_id: 'tx-1')
+      decoded_transaction = OpenStruct.new(transaction_id: "tx-1")
       verifier = FakeVerifier.new([decoded_transaction])
 
       status_response = OpenStruct.new(data: [])
-      history_response = OpenStruct.new(signed_transactions: ['signed-jws'])
+      history_response = OpenStruct.new(signed_transactions: ["signed-jws"])
 
       client = Minitest::Mock.new
       client.expect(:get_all_subscription_statuses, status_response, [@original_transaction_id])
@@ -43,7 +43,7 @@ module AppstoreWebhooks
 
       assert_equal status_response, result.status_response
       assert_equal [decoded_transaction], result.decoded_transactions
-      assert_equal ['signed-jws'], verifier.calls
+      assert_equal ["signed-jws"], verifier.calls
       client.verify
     end
 

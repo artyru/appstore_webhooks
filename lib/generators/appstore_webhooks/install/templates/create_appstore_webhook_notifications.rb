@@ -8,7 +8,7 @@ class CreateAppstoreWebhookNotifications < ActiveRecord::Migration[7.1]
       t.jsonb :raw_payload, null: false, default: {}
       t.jsonb :transaction_payload, null: false, default: {}
       t.jsonb :renewal_payload, null: false, default: {}
-      t.string :processing_state, null: false, default: 'pending'
+      t.string :processing_state, null: false, default: "pending"
       t.string :processing_error
       t.references :subscription, type: :uuid, foreign_key: true
 

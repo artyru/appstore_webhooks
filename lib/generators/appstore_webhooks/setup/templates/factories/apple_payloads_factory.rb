@@ -2,23 +2,23 @@
 
 FactoryBot.define do
   factory :apple_transaction_payload, class: Hash do
-    bundleId { 'team.memriq.test' }
-    productId { 'pro.weekly' }
+    bundleId { "team.memriq.test" }
+    productId { "pro.weekly" }
     originalTransactionId { SecureRandom.uuid }
     transactionId { originalTransactionId }
     appAccountToken { SecureRandom.uuid }
-    environment { 'LocalTesting' }
+    environment { "LocalTesting" }
     signedDate { (Time.current.to_i * 1000) }
     purchaseDate { signedDate }
     expiresDate { (1.hour.from_now.to_i * 1000) }
     quantity { 1 }
-    type { 'Auto-Renewable Subscription' }
-    transactionReason { 'PURCHASE' }
+    type { "Auto-Renewable Subscription" }
+    transactionReason { "PURCHASE" }
     appTransactionId { SecureRandom.uuid }
-    storefront { 'USA' }
-    storefrontId { '143441' }
-    currency { 'USD' }
-    subscriptionGroupIdentifier { '99999999' }
+    storefront { "USA" }
+    storefrontId { "143441" }
+    currency { "USD" }
+    subscriptionGroupIdentifier { "99999999" }
     rawType { type }
     rawTransactionReason { transactionReason }
     rawEnvironment { environment }
@@ -55,11 +55,11 @@ FactoryBot.define do
   factory :apple_renewal_payload, class: Hash do
     originalTransactionId { SecureRandom.uuid }
     autoRenewStatus { 1 }
-    environment { 'LocalTesting' }
+    environment { "LocalTesting" }
     renewalDate { (1.day.from_now.to_i * 1000) }
     recentSubscriptionStartDate { (Time.current.to_i * 1000) }
-    autoRenewProductId { 'pro.weekly' }
-    productId { 'pro.weekly' }
+    autoRenewProductId { "pro.weekly" }
+    productId { "pro.weekly" }
     priceIncreaseStatus { nil }
 
     initialize_with { attributes.stringify_keys }

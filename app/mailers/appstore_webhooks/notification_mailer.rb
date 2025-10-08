@@ -4,7 +4,7 @@ module AppstoreWebhooks
   class NotificationMailer < ApplicationMailer
     default(
       to: -> { alert_recipients },
-      subject: 'App Store webhook requires attention'
+      subject: "App Store webhook requires attention"
     )
 
     def self.available?

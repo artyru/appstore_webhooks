@@ -61,7 +61,7 @@ module AppstoreWebhooks
     end
 
     def render_invalid_json(_error)
-      render json: { error: 'invalid_json' }, status: :bad_request
+      render json: { error: "invalid_json" }, status: :bad_request
     end
 
     def render_verification_failure(error)
@@ -71,11 +71,11 @@ module AppstoreWebhooks
     def error_code(error)
       case error
       when AppstoreSDK::Rails::NotificationProcessor::MissingSignedPayloadError
-        'missing_signed_payload'
+        "missing_signed_payload"
       when AppstoreSDK::Rails::NotificationProcessor::InvalidSignedPayloadError
-        'invalid_signed_payload'
+        "invalid_signed_payload"
       else
-        'invalid_request'
+        "invalid_request"
       end
     end
   end

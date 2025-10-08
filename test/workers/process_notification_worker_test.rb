@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class ProcessNotificationWorkerTest < ActiveSupport::TestCase
   SimplePayload = Struct.new(:data) do
@@ -24,15 +24,15 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     ActiveJob::Base.queue_adapter = :test
     clear_enqueued_jobs
 
-    @bundle_id = 'team.memriq.test'
+    @bundle_id = "team.memriq.test"
     @app_account_token = SecureRandom.uuid
     @notification_uuid = SecureRandom.uuid
     @base_transaction = build_transaction_payload(
-      'bundleId' => @bundle_id,
-      'appAccountToken' => @app_account_token,
-      'originalTransactionId' => '10000000000001',
-      'transactionId' => '10000000000001',
-      'productId' => 'product.basic'
+      "bundleId" => @bundle_id,
+      "appAccountToken" => @app_account_token,
+      "originalTransactionId" => "10000000000001",
+      "transactionId" => "10000000000001",
+      "productId" => "product.basic"
     )
 
     @original_environment = AppstoreSDK.configuration.environment
@@ -49,14 +49,14 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
   end
 
   def test_creates_subscription_and_marks_notification_processed_for_subscribed
-    user = create_user(app_account_token: @app_account_token)
+    create_user(app_account_token: @app_account_token)
     renewal_payload = build_renewal_payload(
-      'originalTransactionId' => @base_transaction['originalTransactionId'],
-      'autoRenewStatus' => '1'
+      "originalTransactionId" => @base_transaction["originalTransactionId"],
+      "autoRenewStatus" => "1"
     )
 
     payload_hash = build_worker_payload(
-      notification_type: 'SUBSCRIBED',
+      notification_type: "SUBSCRIBED",
       transaction_payload: @base_transaction,
       renewal_payload: renewal_payload
     )
@@ -71,13 +71,13 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
       end
     end
 
-    subscription = AppstoreWebhooks::Subscription.find_by(original_transaction_id: @base_transaction['originalTransactionId'])
+    subscription = AppstoreWebhooks::Subscription.find_by(original_transaction_id: @base_transaction["originalTransactionId"])
     assert subscription.present?
-    assert_equal 'active', subscription.status
+    assert_equal "active", subscription.status
     assert_equal true, subscription.auto_renew_status
 
     notification = AppstoreWebhooks::Notification.find_by(notification_uuid: @notification_uuid)
-    assert_equal 'processed', notification.processing_state
+    assert_equal "processed", notification.processing_state
     assert_equal subscription, notification.subscription
   end
 
@@ -85,21 +85,21 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     user = create_user(app_account_token: @app_account_token)
     subscription = create_subscription(
       user: user,
-      original_transaction_id: @base_transaction['originalTransactionId'],
+      original_transaction_id: @base_transaction["originalTransactionId"],
       app_account_token: @app_account_token,
-      product_id: @base_transaction['productId'],
-      status: 'active'
+      product_id: @base_transaction["productId"],
+      status: "active"
     )
 
-    transaction_payload = @base_transaction.merge('expiresDate' => (2.hours.from_now.to_i * 1000))
+    transaction_payload = @base_transaction.merge("expiresDate" => (2.hours.from_now.to_i * 1000))
     renewal_payload = build_renewal_payload(
-      'originalTransactionId' => @base_transaction['originalTransactionId'],
-      'autoRenewStatus' => '0'
+      "originalTransactionId" => @base_transaction["originalTransactionId"],
+      "autoRenewStatus" => "0"
     )
 
     payload_hash = build_worker_payload(
-      notification_type: 'DID_CHANGE_RENEWAL_STATUS',
-      subtype: 'AUTO_RENEW_DISABLED',
+      notification_type: "DID_CHANGE_RENEWAL_STATUS",
+      subtype: "AUTO_RENEW_DISABLED",
       transaction_payload: transaction_payload,
       renewal_payload: renewal_payload
     )
@@ -111,18 +111,18 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     end
 
     subscription.reload
-    assert_equal 'canceled', subscription.status
+    assert_equal "canceled", subscription.status
     assert_equal false, subscription.auto_renew_status
 
     notification = AppstoreWebhooks::Notification.find_by(notification_uuid: @notification_uuid)
-    assert_equal 'processed', notification.processing_state
+    assert_equal "processed", notification.processing_state
   end
 
   def test_marks_notification_failed_and_enqueues_alert_when_user_missing
     create_user(app_account_token: @app_account_token)&.destroy
 
     payload_hash = build_worker_payload(
-      notification_type: 'SUBSCRIBED',
+      notification_type: "SUBSCRIBED",
       transaction_payload: @base_transaction
     )
 
@@ -135,13 +135,13 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     end
 
     notification = AppstoreWebhooks::Notification.find_by(notification_uuid: @notification_uuid)
-    assert_equal 'failed', notification.processing_state
+    assert_equal "failed", notification.processing_state
     assert_match(/User not found/, notification.processing_error)
   end
 
   def test_enqueues_consumption_response_for_consumption_request
     payload_hash = build_worker_payload(
-      notification_type: 'CONSUMPTION_REQUEST',
+      notification_type: "CONSUMPTION_REQUEST",
       transaction_payload: @base_transaction
     )
 
@@ -152,17 +152,17 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     end
 
     notification = AppstoreWebhooks::Notification.find_by(notification_uuid: @notification_uuid)
-    assert_equal 'processing', notification.processing_state
+    assert_equal "processing", notification.processing_state
     assert_enqueued_with(job: AppstoreWebhooks::RespondToConsumptionRequestJob, args: [notification.id])
   end
 
   def test_marks_notification_processed_when_transaction_data_missing
     payload_hash = {
-      'notificationType' => 'DID_RENEW',
-      'notificationUUID' => @notification_uuid,
-      'data' => { 'environment' => 'LocalTesting' },
-      'version' => '2.0',
-      'signedDate' => (Time.current.to_i * 1000)
+      "notificationType" => "DID_RENEW",
+      "notificationUUID" => @notification_uuid,
+      "data" => { "environment" => "LocalTesting" },
+      "version" => "2.0",
+      "signedDate" => (Time.current.to_i * 1000)
     }
 
     assert_difference -> { AppstoreWebhooks::Notification.count }, 1 do
@@ -172,7 +172,7 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     end
 
     notification = AppstoreWebhooks::Notification.find_by(notification_uuid: @notification_uuid)
-    assert_equal 'processed', notification.processing_state
+    assert_equal "processed", notification.processing_state
     assert_nil notification.subscription
   end
 
@@ -180,23 +180,23 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     user = create_user(app_account_token: @app_account_token)
     subscription = create_subscription(
       user: user,
-      original_transaction_id: @base_transaction['originalTransactionId'],
+      original_transaction_id: @base_transaction["originalTransactionId"],
       app_account_token: @app_account_token,
-      product_id: @base_transaction['productId'],
-      status: 'canceled',
+      product_id: @base_transaction["productId"],
+      status: "canceled",
       expires_at: 1.day.from_now
     )
     subscription.update!(last_synced_at: Time.current)
 
     old_time = 2.days.ago
     transaction_payload = @base_transaction.merge(
-      'signedDate' => (old_time.to_i * 1000),
-      'purchaseDate' => (old_time.to_i * 1000),
-      'expiresDate' => (old_time.to_i * 1000)
+      "signedDate" => (old_time.to_i * 1000),
+      "purchaseDate" => (old_time.to_i * 1000),
+      "expiresDate" => (old_time.to_i * 1000)
     )
 
     payload_hash = build_worker_payload(
-      notification_type: 'SUBSCRIBED',
+      notification_type: "SUBSCRIBED",
       transaction_payload: transaction_payload,
       signed_date: old_time
     )
@@ -206,10 +206,10 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     end
 
     subscription.reload
-    assert_equal 'canceled', subscription.status
+    assert_equal "canceled", subscription.status
 
     notification = AppstoreWebhooks::Notification.find_by(notification_uuid: @notification_uuid)
-    assert_equal 'processed', notification.processing_state
+    assert_equal "processed", notification.processing_state
     assert_nil notification.processing_error
   end
 
@@ -217,43 +217,44 @@ class ProcessNotificationWorkerTest < ActiveSupport::TestCase
     user = create_user(app_account_token: @app_account_token)
     create_subscription(
       user: user,
-      original_transaction_id: @base_transaction['originalTransactionId'],
+      original_transaction_id: @base_transaction["originalTransactionId"],
       app_account_token: @app_account_token,
-      product_id: @base_transaction['productId'],
-      status: 'active'
+      product_id: @base_transaction["productId"],
+      status: "active"
     )
 
     payload_hash = build_worker_payload(
-      notification_type: 'SUBSCRIBED',
+      notification_type: "SUBSCRIBED",
       transaction_payload: @base_transaction
     )
 
-    AppstoreWebhooks::SubscriptionSyncService.stub(:new, ->(*) { raise StandardError, 'sync-failed' }) do
+    AppstoreWebhooks::SubscriptionSyncService.stub(:new, ->(*) { raise StandardError, "sync-failed" }) do
       error = assert_raises(StandardError) do
         perform_worker(payload_hash, transaction_payload: @base_transaction, renewal_payload: {})
       end
-      assert_equal 'sync-failed', error.message
+      assert_equal "sync-failed", error.message
     end
 
     notification = AppstoreWebhooks::Notification.find_by(notification_uuid: @notification_uuid)
-    assert_equal 'failed', notification.processing_state
-    assert_equal 'sync-failed', notification.processing_error
+    assert_equal "failed", notification.processing_state
+    assert_equal "sync-failed", notification.processing_error
   end
 
   private
 
-  def build_worker_payload(notification_type:, transaction_payload:, renewal_payload: {}, subtype: nil, signed_date: Time.current)
-    data = { 'environment' => 'LocalTesting' }
-    data['signedTransactionInfo'] = 'stub-transaction' if transaction_payload.present?
-    data['signedRenewalInfo'] = 'stub-renewal' if renewal_payload.present?
+  def build_worker_payload(notification_type:, transaction_payload:, renewal_payload: {}, subtype: nil,
+                           signed_date: Time.current)
+    data = { "environment" => "LocalTesting" }
+    data["signedTransactionInfo"] = "stub-transaction" if transaction_payload.present?
+    data["signedRenewalInfo"] = "stub-renewal" if renewal_payload.present?
 
     {
-      'notificationType' => notification_type,
-      'subtype' => subtype,
-      'notificationUUID' => @notification_uuid,
-      'data' => data,
-      'version' => '2.0',
-      'signedDate' => (signed_date.to_i * 1000)
+      "notificationType" => notification_type,
+      "subtype" => subtype,
+      "notificationUUID" => @notification_uuid,
+      "data" => data,
+      "version" => "2.0",
+      "signedDate" => (signed_date.to_i * 1000)
     }.compact
   end
 

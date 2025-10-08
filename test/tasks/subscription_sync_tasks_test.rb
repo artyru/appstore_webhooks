@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require 'test_helper'
-require 'rake'
+require "test_helper"
+require "rake"
 
 class SubscriptionSyncTasksTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
-  SYNC_TASK = 'appstore_webhooks:subscriptions:sync'
-  SYNC_STALE_TASK = 'appstore_webhooks:subscriptions:sync_stale'
+  SYNC_TASK = "appstore_webhooks:subscriptions:sync"
+  SYNC_STALE_TASK = "appstore_webhooks:subscriptions:sync_stale"
 
   setup do
     Rails.application.load_tasks unless Rake::Task.task_defined?(SYNC_TASK)
@@ -22,7 +22,7 @@ class SubscriptionSyncTasksTest < ActiveSupport::TestCase
   end
 
   def test_sync_runs_service_synchronously_by_default
-    subscription = create_subscription(original_transaction_id: '10000000000021', last_synced_at: nil)
+    subscription = create_subscription(original_transaction_id: "10000000000021", last_synced_at: nil)
     result = AppstoreWebhooks::RemoteSubscriptionSyncService::Result.new(
       status_response: nil,
       decoded_transactions: [],
@@ -38,12 +38,12 @@ class SubscriptionSyncTasksTest < ActiveSupport::TestCase
       end
 
       def call
-        @subscription.update!(last_synced_at: Time.zone.parse('2024-01-03 00:00:00')) if @subscription
+        @subscription.update!(last_synced_at: Time.zone.parse("2024-01-03 00:00:00")) if @subscription
         @result
       end
     end
 
-    AppstoreWebhooks::RemoteSubscriptionSyncService.stub(:new, ->(**kwargs) {
+    AppstoreWebhooks::RemoteSubscriptionSyncService.stub(:new, lambda { |**kwargs|
       captured_subscription = kwargs[:subscription]
       fake_service_class.new(kwargs[:subscription], result)
     }) do
@@ -51,7 +51,7 @@ class SubscriptionSyncTasksTest < ActiveSupport::TestCase
     end
 
     assert_equal subscription, captured_subscription
-    assert_equal Time.zone.parse('2024-01-03 00:00:00'), subscription.reload.last_synced_at
+    assert_equal Time.zone.parse("2024-01-03 00:00:00"), subscription.reload.last_synced_at
     assert_equal 0, enqueued_jobs.size
   ensure
     Rake::Task[SYNC_TASK].reenable
@@ -66,21 +66,21 @@ class SubscriptionSyncTasksTest < ActiveSupport::TestCase
   end
 
   def test_sync_stale_enqueues_only_outdated_subscriptions
-    stale = create_subscription(last_synced_at: 3.days.ago, original_transaction_id: '10000000001000')
-    recent = create_subscription(last_synced_at: 10.minutes.ago, original_transaction_id: '10000000001001')
-    never = create_subscription(last_synced_at: nil, original_transaction_id: '10000000001002')
+    stale = create_subscription(last_synced_at: 3.days.ago, original_transaction_id: "10000000001000")
+    recent = create_subscription(last_synced_at: 10.minutes.ago, original_transaction_id: "10000000001001")
+    never = create_subscription(last_synced_at: nil, original_transaction_id: "10000000001002")
 
-    ENV['ASYNC'] = 'true'
-    ENV['LIMIT'] = '2'
-    ENV['STALE_AFTER_MINUTES'] = '60'
-    ENV['SILENT'] = 'true'
+    ENV["ASYNC"] = "true"
+    ENV["LIMIT"] = "2"
+    ENV["STALE_AFTER_MINUTES"] = "60"
+    ENV["SILENT"] = "true"
 
     assert_enqueued_jobs 2 do
       Rake::Task[SYNC_STALE_TASK].invoke
     end
 
     job_args = enqueued_jobs.map { |job| job[:args].first }
-    subscription_ids = job_args.map { |args| args['subscription_id'] }.compact
+    subscription_ids = job_args.map { |args| args["subscription_id"] }.compact
 
     assert_includes subscription_ids, stale.id
     assert_includes subscription_ids, never.id

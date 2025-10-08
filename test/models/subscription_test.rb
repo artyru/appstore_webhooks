@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class SubscriptionTest < ActiveSupport::TestCase
   def test_requires_original_transaction_id
@@ -9,7 +9,7 @@ class SubscriptionTest < ActiveSupport::TestCase
       user: user,
       original_transaction_id: nil,
       app_account_token: user.app_account_token,
-      product_id: 'product.basic'
+      product_id: "product.basic"
     )
 
     assert_not subscription.valid?
@@ -22,9 +22,9 @@ class SubscriptionTest < ActiveSupport::TestCase
       user: user,
       original_transaction_id: SecureRandom.uuid,
       app_account_token: user.app_account_token,
-      product_id: 'product.basic',
-      status: 'active',
-      environment: 'sandbox'
+      product_id: "product.basic",
+      status: "active",
+      environment: "sandbox"
     )
 
     assert_not subscription.valid?
@@ -44,20 +44,20 @@ class SubscriptionTest < ActiveSupport::TestCase
   end
 
   def test_active_returns_false_when_status_not_active
-    subscription = create_subscription(status: 'canceled', expires_at: 1.hour.from_now)
+    subscription = create_subscription(status: "canceled", expires_at: 1.hour.from_now)
 
     assert_not subscription.active?
   end
 
   def test_entitlement_active_returns_true_for_active_subscription
-    subscription = create_subscription(status: 'active', expires_at: 30.minutes.from_now)
+    subscription = create_subscription(status: "active", expires_at: 30.minutes.from_now)
 
     assert subscription.entitlement_active?
   end
 
   def test_entitlement_active_returns_true_during_grace_period
     subscription = create_subscription(
-      status: 'grace',
+      status: "grace",
       expires_at: 1.hour.ago,
       grace_period_expires_at: 1.hour.from_now
     )
@@ -67,7 +67,7 @@ class SubscriptionTest < ActiveSupport::TestCase
 
   def test_entitlement_active_returns_false_when_grace_period_over
     subscription = create_subscription(
-      status: 'grace',
+      status: "grace",
       expires_at: 2.hours.ago,
       grace_period_expires_at: 5.minutes.ago
     )
@@ -76,14 +76,14 @@ class SubscriptionTest < ActiveSupport::TestCase
   end
 
   def test_entitlement_active_returns_true_when_canceled_but_still_valid
-    subscription = create_subscription(status: 'canceled', expires_at: 45.minutes.from_now)
+    subscription = create_subscription(status: "canceled", expires_at: 45.minutes.from_now)
 
     assert subscription.entitlement_active?
   end
 
   def test_entitlement_active_returns_false_when_canceled_and_expired
     subscription = create_subscription(
-      status: 'canceled',
+      status: "canceled",
       expires_at: 30.minutes.ago,
       grace_period_expires_at: 1.day.from_now
     )
@@ -92,15 +92,15 @@ class SubscriptionTest < ActiveSupport::TestCase
   end
 
   def test_sync_from_transaction_normalizes_epoch_timestamps_to_time_zone
-    Time.use_zone('Pacific Time (US & Canada)') do
+    Time.use_zone("Pacific Time (US & Canada)") do
       subscription = create_subscription(expires_at: 1.hour.from_now)
       millis = (Time.current + 2.hours).to_i * 1000
       payload = {
-        'expiresDate' => millis,
-        'appAccountToken' => subscription.app_account_token,
-        'productId' => subscription.product_id,
-        'originalTransactionId' => subscription.original_transaction_id,
-        'environment' => 'Sandbox'
+        "expiresDate" => millis,
+        "appAccountToken" => subscription.app_account_token,
+        "productId" => subscription.product_id,
+        "originalTransactionId" => subscription.original_transaction_id,
+        "environment" => "Sandbox"
       }
 
       subscription.sync_from_transaction(payload: payload)
@@ -110,5 +110,4 @@ class SubscriptionTest < ActiveSupport::TestCase
       assert_instance_of ActiveSupport::TimeWithZone, subscription.expires_at
     end
   end
-
 end

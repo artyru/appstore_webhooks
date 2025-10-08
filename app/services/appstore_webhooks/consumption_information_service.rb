@@ -11,7 +11,7 @@ module AppstoreWebhooks
 
     def call
       transaction_id = transaction_payload[:transaction_id]
-      raise ArgumentError, 'transaction_id is required to send consumption information' if transaction_id.blank?
+      raise ArgumentError, "transaction_id is required to send consumption information" if transaction_id.blank?
 
       client.send_consumption_data(transaction_id, build_consumption_request)
     end

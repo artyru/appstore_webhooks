@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'appstore_webhooks/testing/apple_payload_helper'
+require "appstore_webhooks/testing/apple_payload_helper"
 
 if defined?(RSpec)
   RSpec.configure do |config|
@@ -8,6 +8,4 @@ if defined?(RSpec)
   end
 end
 
-if defined?(ActiveSupport::TestCase)
-  ActiveSupport::TestCase.include AppstoreWebhooks::Testing::ApplePayloadHelper
-end
+ActiveSupport::TestCase.include AppstoreWebhooks::Testing::ApplePayloadHelper if defined?(ActiveSupport::TestCase)

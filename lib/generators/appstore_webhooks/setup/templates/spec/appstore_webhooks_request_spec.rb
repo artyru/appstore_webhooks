@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'rails_helper'
+require "rails_helper"
 
-RSpec.describe 'AppstoreWebhooks notifications', type: :request do
+RSpec.describe "AppstoreWebhooks notifications", type: :request do
   include ActiveJob::TestHelper
 
   # Adjust this path to match how you mount the engine in your application.
-  let(:endpoint_path) { '/api/v1/appstore_webhooks' }
+  let(:endpoint_path) { "/api/v1/appstore_webhooks" }
   let(:user_token) { SecureRandom.uuid }
 
   # Update this factory to match your application's user model.
@@ -21,23 +21,23 @@ RSpec.describe 'AppstoreWebhooks notifications', type: :request do
 
   let(:renewal_payload) do
     build(:apple_renewal_payload,
-          originalTransactionId: transaction_payload['originalTransactionId'],
-          productId: transaction_payload['productId'])
+          originalTransactionId: transaction_payload["originalTransactionId"],
+          productId: transaction_payload["productId"])
   end
 
   let(:notification_payload) do
     {
-      'notificationType' => 'SUBSCRIBED',
-      'notificationUUID' => SecureRandom.uuid,
-      'data' => {
-        'environment' => transaction_payload['environment'],
-        'bundleId' => transaction_payload['bundleId'],
-        'signedTransactionInfo' => encode_apple_jws(transaction_payload),
-        'signedRenewalInfo' => encode_apple_jws(renewal_payload),
-        'status' => 1
+      "notificationType" => "SUBSCRIBED",
+      "notificationUUID" => SecureRandom.uuid,
+      "data" => {
+        "environment" => transaction_payload["environment"],
+        "bundleId" => transaction_payload["bundleId"],
+        "signedTransactionInfo" => encode_apple_jws(transaction_payload),
+        "signedRenewalInfo" => encode_apple_jws(renewal_payload),
+        "status" => 1
       },
-      'version' => '2.0',
-      'signedDate' => (Time.current.to_i * 1000)
+      "version" => "2.0",
+      "signedDate" => (Time.current.to_i * 1000)
     }
   end
 
@@ -48,7 +48,7 @@ RSpec.describe 'AppstoreWebhooks notifications', type: :request do
 
     AppstoreSDK.configure do |config|
       config.environment = :local_testing
-      config.bundle_id = transaction_payload['bundleId']
+      config.bundle_id = transaction_payload["bundleId"]
     end
 
     allow(AppstoreWebhooks::ProcessNotificationWorker).to receive(:perform_now).and_call_original
@@ -58,7 +58,7 @@ RSpec.describe 'AppstoreWebhooks notifications', type: :request do
     ActiveJob::Base.queue_adapter = :inline
   end
 
-  it 'persists the notification and triggers processing' do
+  it "persists the notification and triggers processing" do
     expect do
       post endpoint_path, params: request_body, as: :json
     end.to change(AppstoreWebhooks::Notification, :count).by(1)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class AppstoreWebhooksRoutesTest < ActiveSupport::TestCase
   class FakeMapper
@@ -25,15 +25,15 @@ class AppstoreWebhooksRoutesTest < ActiveSupport::TestCase
     @mapper.appstore_webhooks_notifications
 
     path, options = @mapper.calls.first
-    assert_equal 'appstore_webhooks', path
-    assert_equal({ to: '/appstore_webhooks/webhooks#create', module: nil }, options)
+    assert_equal "appstore_webhooks", path
+    assert_equal({ to: "/appstore_webhooks/webhooks#create", module: nil }, options)
   end
 
   def test_custom_route_configuration
-    @mapper.appstore_webhooks_notifications(path: 'storekit/notifications', to: 'api/webhooks#create')
+    @mapper.appstore_webhooks_notifications(path: "storekit/notifications", to: "api/webhooks#create")
 
     path, options = @mapper.calls.first
-    assert_equal 'storekit/notifications', path
-    assert_equal({ to: 'api/webhooks#create' }, options)
+    assert_equal "storekit/notifications", path
+    assert_equal({ to: "api/webhooks#create" }, options)
   end
 end

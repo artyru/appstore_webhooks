@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'test_helper'
-require 'rake'
+require "test_helper"
+require "rake"
 
 class RetryFailedNotificationsTaskTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
-  TASK_NAME = 'appstore_webhooks:notifications:retry_failed'
+  TASK_NAME = "appstore_webhooks:notifications:retry_failed"
 
   setup do
     Rails.application.load_tasks unless Rake::Task.task_defined?(TASK_NAME)
@@ -21,8 +21,8 @@ class RetryFailedNotificationsTaskTest < ActiveSupport::TestCase
   def test_requeues_failed_notifications
     notification = create_notification(
       processing_state: AppstoreWebhooks::Notification::STATES[:failed],
-      processing_error: 'boom',
-      raw_payload: { 'signedPayload' => 'token' }
+      processing_error: "boom",
+      raw_payload: { "signedPayload" => "token" }
     )
 
     assert_enqueued_with(job: AppstoreWebhooks::ProcessNotificationWorker) do
@@ -38,18 +38,18 @@ class RetryFailedNotificationsTaskTest < ActiveSupport::TestCase
     notifications = Array.new(3) do
       create_notification(
         processing_state: AppstoreWebhooks::Notification::STATES[:failed],
-        raw_payload: { 'signedPayload' => SecureRandom.uuid }
+        raw_payload: { "signedPayload" => SecureRandom.uuid }
       )
     end
 
-    ENV['LIMIT'] = '2'
+    ENV["LIMIT"] = "2"
 
     Rake::Task[TASK_NAME].invoke
 
     processed = notifications.select { |n| n.reload.processing_state == AppstoreWebhooks::Notification::STATES[:pending] }
     assert_equal 2, processed.size
   ensure
-    ENV.delete('LIMIT')
+    ENV.delete("LIMIT")
   end
 
   def test_skips_notifications_without_raw_payload

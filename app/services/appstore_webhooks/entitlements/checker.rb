@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'active_support/core_ext/hash/indifferent_access'
-require 'active_support/core_ext/hash/keys'
+require "active_support/core_ext/hash/indifferent_access"
+require "active_support/core_ext/hash/keys"
 
 module AppstoreWebhooks
   module Entitlements
@@ -50,7 +50,7 @@ module AppstoreWebhooks
       end
 
       def feature_settings
-        features = extract_hash(config[:features] || config['features'])
+        features = extract_hash(config[:features] || config["features"])
         extract_hash(features[feature] || features[feature.to_sym])
       end
 

@@ -15,7 +15,7 @@ module AppstoreWebhooks
 
       notification = upsert_notification(payload, payload_hash, transaction_payload, renewal_payload)
 
-      if notification.notification_type == 'CONSUMPTION_REQUEST'
+      if notification.notification_type == "CONSUMPTION_REQUEST"
         AppstoreWebhooks::RespondToConsumptionRequestJob.perform_later(notification.id)
         return
       end
@@ -36,9 +36,9 @@ module AppstoreWebhooks
         AppstoreSDK.configuration.enable_online_checks,
         AppstoreSDK.configuration.environment,
         AppstoreSDK.configuration.bundle_id,
-        app_apple_id:   AppstoreSDK.configuration.app_apple_id,
+        app_apple_id: AppstoreSDK.configuration.app_apple_id,
         chain_verifier: AppstoreSDK.configuration.chain_verifier,
-        cache:          AppstoreSDK.configuration.cache
+        cache: AppstoreSDK.configuration.cache
       )
     end
 
@@ -120,7 +120,8 @@ module AppstoreWebhooks
 
       subscription.reload
 
-      create_subscription_event(subscription, notification, previous_status, transaction_payload, renewal_payload, effective_payload)
+      create_subscription_event(subscription, notification, previous_status, transaction_payload, renewal_payload,
+                                effective_payload)
 
       notification.update!(subscription: subscription,
                            processing_state: Notification::STATES[:processed],
@@ -194,7 +195,7 @@ module AppstoreWebhooks
 
     def skip_stale_event?(subscription, event_timestamp)
       return false if event_timestamp.nil?
-      return false if subscription.previous_changes.key?('id')
+      return false if subscription.previous_changes.key?("id")
       return false unless subscription.last_synced_at.present?
 
       event_timestamp <= subscription.last_synced_at
@@ -221,7 +222,8 @@ module AppstoreWebhooks
       nil
     end
 
-    def create_subscription_event(subscription, notification, previous_status, transaction_payload, renewal_payload, effective_payload)
+    def create_subscription_event(subscription, notification, previous_status, transaction_payload, renewal_payload,
+                                  effective_payload)
       SubscriptionEvent.create!(
         subscription: subscription,
         webhook_notification: notification,

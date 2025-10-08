@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'base64'
-require 'json'
+require "base64"
+require "json"
 
 module AppstoreWebhooks
   module Testing
@@ -9,9 +9,9 @@ module AppstoreWebhooks
       module_function
 
       def encode_apple_jws(payload)
-        header = Base64.urlsafe_encode64({ alg: 'none', kid: nil, typ: 'JWT' }.to_json, padding: false)
+        header = Base64.urlsafe_encode64({ alg: "none", kid: nil, typ: "JWT" }.to_json, padding: false)
         body = Base64.urlsafe_encode64(payload.to_json, padding: false)
-        [header, body, ''].join('.')
+        [header, body, ""].join(".")
       end
     end
   end

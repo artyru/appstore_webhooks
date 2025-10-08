@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class SubscriptionEventTest < ActiveSupport::TestCase
   def setup
@@ -14,7 +14,7 @@ class SubscriptionEventTest < ActiveSupport::TestCase
     event = AppstoreWebhooks::SubscriptionEvent.new(
       subscription: @subscription,
       webhook_notification: @notification,
-      previous_status: 'active'
+      previous_status: "active"
     )
 
     assert_not event.valid?
@@ -26,16 +26,16 @@ class SubscriptionEventTest < ActiveSupport::TestCase
     event = AppstoreWebhooks::SubscriptionEvent.new(
       subscription: @subscription,
       webhook_notification: @notification,
-      previous_status: 'active',
-      next_status: 'expired',
+      previous_status: "active",
+      next_status: "expired",
       effective_at: Time.current,
-      metadata: { 'foo' => 'bar' }
+      metadata: { "foo" => "bar" }
     )
 
     assert_difference -> { AppstoreWebhooks::SubscriptionEvent.count }, 1 do
       event.save!
     end
 
-    assert_equal 'bar', event.reload.metadata['foo']
+    assert_equal "bar", event.reload.metadata["foo"]
   end
 end

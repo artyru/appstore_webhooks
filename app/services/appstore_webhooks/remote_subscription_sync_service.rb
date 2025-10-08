@@ -3,11 +3,11 @@
 module AppstoreWebhooks
   class RemoteSubscriptionSyncService
     STATUS_MAP = {
-      'ACTIVE' => 'active',
-      'EXPIRED' => 'expired',
-      'BILLING_RETRY' => 'billing_retry',
-      'BILLING_GRACE_PERIOD' => 'grace',
-      'REVOKED' => 'revoked'
+      "ACTIVE" => "active",
+      "EXPIRED" => "expired",
+      "BILLING_RETRY" => "billing_retry",
+      "BILLING_GRACE_PERIOD" => "grace",
+      "REVOKED" => "revoked"
     }.freeze
 
     TRANSACTION_TIMESTAMP_FIELDS = %i[
@@ -31,7 +31,7 @@ module AppstoreWebhooks
     def initialize(subscription: nil, original_transaction_id: nil, client: nil, verifier: nil, time_source: nil)
       @subscription = subscription
       @original_transaction_id = original_transaction_id || subscription&.original_transaction_id
-      raise ArgumentError, 'original_transaction_id is required' if @original_transaction_id.to_s.empty?
+      raise ArgumentError, "original_transaction_id is required" if @original_transaction_id.to_s.empty?
 
       @client = client || AppstoreSDK::Client::Base.new
       @verifier = verifier || build_verifier
@@ -107,8 +107,8 @@ module AppstoreWebhooks
       return nil if payload.to_s.empty?
 
       verifier.verify_and_decode_signed_transaction(payload)
-    rescue StandardError => error
-      log_decode_failure('transaction', error)
+    rescue StandardError => e
+      log_decode_failure("transaction", e)
       nil
     end
 
@@ -116,8 +116,8 @@ module AppstoreWebhooks
       return nil if payload.to_s.empty?
 
       verifier.verify_and_decode_signed_renewal_info(payload)
-    rescue StandardError => error
-      log_decode_failure('renewal', error)
+    rescue StandardError => e
+      log_decode_failure("renewal", e)
       nil
     end
 
@@ -138,7 +138,10 @@ module AppstoreWebhooks
 
       if tx
         updates[:product_id] = tx.product_id if tx.respond_to?(:product_id)
-        updates[:app_account_token] = tx.app_account_token if tx.respond_to?(:app_account_token) && tx.app_account_token.present?
+        if tx.respond_to?(:app_account_token) && tx.app_account_token.present?
+          updates[:app_account_token] =
+            tx.app_account_token
+        end
         updates[:environment] = derive_environment(tx) if tx.respond_to?(:environment)
         updates[:expires_at] = parse_timestamp(tx, :expires_date)
         updates[:grace_period_expires_at] = parse_timestamp(tx, :grace_period_expires_date)
@@ -180,12 +183,11 @@ module AppstoreWebhooks
 
     def interpret_auto_renew_status(renewal)
       value = renewal&.auto_renew_status
-      if value.respond_to?(:name)
-        return value.name == 'ON'
-      end
+      return value.name == "ON" if value.respond_to?(:name)
+
       raw = renewal&.raw_auto_renew_status
-      return true if raw.to_s == '1'
-      return false if raw.to_s == '0'
+      return true if raw.to_s == "1"
+      return false if raw.to_s == "0"
 
       nil
     end

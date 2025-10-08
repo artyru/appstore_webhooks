@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 module AppstoreWebhooks
   module Entitlements
@@ -9,22 +9,22 @@ module AppstoreWebhooks
         @user = create_user
         @feature = :dictionary_words
         AppstoreWebhooks.configuration.entitlements = {
-          'features' => {
-            'dictionary_words' => {
-              'product_ids' => ['pro.weekly', 'pro.monthly']
+          "features" => {
+            "dictionary_words" => {
+              "product_ids" => ["pro.weekly", "pro.monthly"]
             }
           }
         }
       end
 
       def test_returns_true_when_subscription_active
-        create_subscription(user: @user, product_id: 'pro.weekly', status: 'active', expires_at: 1.day.from_now)
+        create_subscription(user: @user, product_id: "pro.weekly", status: "active", expires_at: 1.day.from_now)
 
         assert Checker.call(user: @user, feature: @feature)
       end
 
       def test_returns_true_when_subscription_canceled_but_not_expired
-        create_subscription(user: @user, product_id: 'pro.weekly', status: 'canceled', expires_at: 1.hour.from_now)
+        create_subscription(user: @user, product_id: "pro.weekly", status: "canceled", expires_at: 1.hour.from_now)
 
         assert Checker.call(user: @user, feature: @feature)
       end
@@ -32,8 +32,8 @@ module AppstoreWebhooks
       def test_returns_true_for_grace_period
         create_subscription(
           user: @user,
-          product_id: 'pro.monthly',
-          status: 'grace',
+          product_id: "pro.monthly",
+          status: "grace",
           expires_at: 1.day.ago,
           grace_period_expires_at: 1.day.from_now
         )
@@ -42,7 +42,7 @@ module AppstoreWebhooks
       end
 
       def test_returns_false_for_expired_subscription
-        create_subscription(user: @user, product_id: 'pro.weekly', status: 'active', expires_at: 1.day.ago)
+        create_subscription(user: @user, product_id: "pro.weekly", status: "active", expires_at: 1.day.ago)
 
         refute Checker.call(user: @user, feature: @feature)
       end
@@ -50,8 +50,8 @@ module AppstoreWebhooks
       def test_returns_false_when_canceled_subscription_expired
         create_subscription(
           user: @user,
-          product_id: 'pro.weekly',
-          status: 'canceled',
+          product_id: "pro.weekly",
+          status: "canceled",
           expires_at: 1.hour.ago,
           grace_period_expires_at: 1.day.from_now
         )
@@ -61,21 +61,21 @@ module AppstoreWebhooks
 
       def test_returns_false_for_disallowed_status
         AppstoreWebhooks.configuration.entitlements = {
-          'features' => {
-            'dictionary_words' => {
-              'product_ids' => ['pro.weekly'],
-              'allowed_statuses' => ['active']
+          "features" => {
+            "dictionary_words" => {
+              "product_ids" => ["pro.weekly"],
+              "allowed_statuses" => ["active"]
             }
           }
         }
 
-        create_subscription(user: @user, product_id: 'pro.weekly', status: 'grace', expires_at: 1.day.from_now)
+        create_subscription(user: @user, product_id: "pro.weekly", status: "grace", expires_at: 1.day.from_now)
 
         refute Checker.call(user: @user, feature: @feature)
       end
 
       def test_returns_false_when_products_do_not_match
-        create_subscription(user: @user, product_id: 'another.product', status: 'active', expires_at: 1.day.from_now)
+        create_subscription(user: @user, product_id: "another.product", status: "active", expires_at: 1.day.from_now)
 
         refute Checker.call(user: @user, feature: @feature)
       end
@@ -92,16 +92,15 @@ module AppstoreWebhooks
         AppstoreWebhooks.configuration.entitlements = {
           features: {
             dictionary_words: {
-              product_ids: ['pro.weekly']
+              product_ids: ["pro.weekly"]
             }
           }
         }
 
-        create_subscription(user: @user, product_id: 'pro.weekly', status: 'active', expires_at: 1.day.from_now)
+        create_subscription(user: @user, product_id: "pro.weekly", status: "active", expires_at: 1.day.from_now)
 
         assert Checker.call(user: @user, feature: @feature)
       end
-
     end
   end
 end
