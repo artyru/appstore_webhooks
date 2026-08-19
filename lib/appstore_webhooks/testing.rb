@@ -14,8 +14,10 @@ module AppstoreWebhooks
       #   require 'appstore_webhooks/testing'
       #   AppstoreWebhooks::Testing.configure_rspec!
       #
-      # Available metadata:
-      #   :appstore_sdk_test_mode - auto configure AppstoreSDK for testing
+      # AppstoreSDK is automatically configured for local_testing mode
+      # in all request specs. HTTP endpoints are stubbed to prevent real requests.
+      #
+      # Use :skip_appstore_sdk_test_mode to disable for specific tests.
       #
       def configure_rspec!
         return unless defined?(RSpec)
@@ -24,22 +26,16 @@ module AppstoreWebhooks
           config.include ApplePayloadHelper, type: :request
           config.include AppstoreSdkHelper, type: :request
 
-          # Around hook for :appstore_sdk_test_mode metadata
-          # Auto-configures AppstoreSDK and stubs HTTP endpoints
-          #
-          # @example
-          #   describe 'Subscriptions', :appstore_sdk_test_mode do
-          #     it 'works' do
-          #       # AppstoreSDK.configuration.environment = :local_testing
-          #       # HTTP stubs for /inApps/v1/* set up
-          #     end
-          #   end
-          config.around(:each, :appstore_sdk_test_mode) do |example|
+          # Auto-configure AppstoreSDK for all request specs
+          # Prevents accidental real HTTP requests to Apple APIs
+          config.around(:each, type: :request) do |example|
+            next example.run if example.metadata[:skip_appstore_sdk_test_mode]
+
             setup_appstore_sdk_test_mode
             stub_appstore_sdk_endpoints if defined?(WebMock)
             example.run
           ensure
-            restore_appstore_sdk_configuration
+            restore_appstore_sdk_configuration unless example.metadata[:skip_appstore_sdk_test_mode]
           end
         end
       end
